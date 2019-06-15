@@ -1,11 +1,16 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
+using UnityEngine.SceneManagement;
 
 public class GameContoller : MonoBehaviour
 {
     public GameObject original;
     public Sprite[] imgs;
+    private Card primeira, segunda;
+    public TextMeshProUGUI scoreTexto, tentativasTexto;
+    private int score, tentativas;
     // Start is called before the first frame update
     void Start()
     {
@@ -22,8 +27,52 @@ public class GameContoller : MonoBehaviour
         {
             GameObject novaCarta = Instantiate(original);
             novaCarta.GetComponent<Card>().changeSprite(ids[i+4], imgs[ids[i+4]]);
-            novaCarta.transform.position = new Vector3(original.transform.position.x + (i * 3), original.transform.position.y+6, original.transform.position.z);
+            novaCarta.transform.position = new Vector3(original.transform.position.x + (i * 3), original.transform.position.y+5, original.transform.position.z);
         }
+    }
+
+    public void revelaCarta(Card carta)
+    {
+        if(primeira == null)
+        {
+            primeira = carta;
+        }
+        else
+        {
+            segunda = carta;
+            tentativas++;
+            tentativasTexto.text = "Tentativas: " + tentativas;
+            StartCoroutine(verificaPar());
+        }
+    }
+
+    public IEnumerator verificaPar()
+    {
+        if(primeira.getID() == segunda.getID())
+        {
+            score++;
+            scoreTexto.text = "Score: " + score;
+            yield return new WaitForSeconds(1f);
+            if(score == 4)
+            {
+                PlayerPrefs.SetInt("Tentativas", tentativas);
+                PlayerPrefs.SetInt("Score", score);
+                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+            }
+        }
+        else
+        {
+            yield return new WaitForSeconds(1f);
+            primeira.virar();
+            segunda.virar();
+        }
+        primeira = null;
+        segunda = null;
+    }
+
+    public Card getSegunda()
+    {
+        return segunda;
     }
 
     private int[] ShuffleArray(int[] ids)
